@@ -11,6 +11,4 @@ interface BubblePickerAdapter {
 
     fun getItem(position: Int): PickerItem
 
-    fun addItem(text: String): PickerItem
-
 }

@@ -5,6 +5,7 @@ import android.opengl.GLES20.*
 import android.opengl.GLUtils
 import com.igalata.bubblelist.Constant.FLOAT_SIZE
 import com.igalata.bubblelist.Constant.TEXTURE_VERTICES
+import org.jbox2d.common.Vec2
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -36,6 +37,13 @@ fun Float.convertPoint(size: Int, scale: Float) = (2f * (this / size.toFloat()) 
 
 fun Float.convertValue(size: Int, scale: Float) = (2f * (this / size.toFloat())) / scale
 
+fun Float.convertValue2(size: Int, scale: Float, offset: Float) = ( 1f - 2f*(this / size.toFloat()) ) / scale
+
+fun Vec2.screenToWorld (scale:Vec2,viewport:Vec2):Vec2{
+    var aspect: Float = viewport.x/viewport.y
+    return Vec2(this.x.convertPoint(viewport.x.toInt(),scale.x),
+             this.y.convertValue2(viewport.y.toInt(),scale.y,0f))
+}
 fun Bitmap.toTexture(textureUnit: Int) {
     glActiveTexture(GL_TEXTURE0)
     glBindTexture(GL_TEXTURE_2D, textureUnit)

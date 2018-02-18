@@ -32,7 +32,6 @@ class Border(world: World, var position: Vec2, var view: Int) {
             return FixtureDef().apply {
                 this.shape = this@Border.shape
                 density = 0.5f
-                restitution = 0.5f
             }
         }
     private val bodyDef: BodyDef

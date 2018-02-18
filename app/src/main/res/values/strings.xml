@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">Bubble Picker</string>
+    <string name="app_name">Bubble List</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!--Bubble task fragment values -->
+    <string name="ed_task_def_name">Task name</string>
+    <string name="ed_task_def_prio">1</string>
+    <string name="btn_create_task">OK</string>
+    <string name="notification_channel">BubbleListNotifier</string>
 </resources>

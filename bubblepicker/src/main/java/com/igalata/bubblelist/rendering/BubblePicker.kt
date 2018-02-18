@@ -11,9 +11,16 @@ import android.view.MotionEvent
 import com.igalata.bubblelist.BubblePickerListener
 import com.igalata.bubblelist.R
 import com.igalata.bubblelist.adapter.BubblePickerAdapter
+import com.igalata.bubblelist.adapter.BubbleTaskData
 import com.igalata.bubblelist.model.BubbleGradient
 import com.igalata.bubblelist.model.Color
 import com.igalata.bubblelist.model.PickerItem
+import com.igalata.bubblelist.model.SavedBubble
+import com.igalata.bubblelist.physics.Engine
+import java.sql.Time
+import java.time.Instant.now
+import java.util.*
+import kotlin.system.measureTimeMillis
 
 /**
  * Created by irinagalata on 1/19/17.
@@ -68,7 +75,10 @@ class BubblePicker : GLSurfaceView {
     private var startY = 0f
     private var previousX = 0f
     private var previousY = 0f
-
+    private var touchDown = false
+    private var curTime: Long = 0
+    private val touchDownTime: Long = 200 //ms
+    private var doubleTap:Boolean = false
     constructor(context: Context?) : this(context, null)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
         setZOrderOnTop(true)
@@ -77,7 +87,7 @@ class BubblePicker : GLSurfaceView {
         holder.setFormat(PixelFormat.RGBA_8888)
         setRenderer(renderer)
         renderMode = RENDERMODE_CONTINUOUSLY
-        attrs?.let { retrieveAttrubutes(attrs) }
+        attrs?.let { retrieveAttributes(attrs) }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -87,28 +97,48 @@ class BubblePicker : GLSurfaceView {
                 startY = event.y
                 previousX = event.x
                 previousY = event.y
-                var pi: PickerItem = renderer.items[renderer.items.size-1].copy(title = "Hello")
-
-                renderer.items.add(pi)
-                Log.d("onTouchEvent:","selected event : " + selectedItems.toString())
+                doubleTap = !doubleTap
+                Log.d("onTouchEvent", "" + (System.currentTimeMillis() - curTime))
+                if (!doubleTap)
+                    curTime = System.currentTimeMillis()
+                if (doubleTap && System.currentTimeMillis() - curTime <= touchDownTime){
+                    //mark object for delete
+                    renderer.delete(event.x,event.y)
+                }
+                if (isClick(event)) renderer.resize(event.x, event.y)
+                //renderer.moveTo(event.x, event.y)
             }
             MotionEvent.ACTION_UP -> {
-                if (isClick(event)) renderer.resize(event.x, event.y)
                 renderer.release()
+                renderer.resize(event.x,event.y)
             }
             MotionEvent.ACTION_MOVE -> {
-                if (isSwipe(event)) {
-                    renderer.swipe(previousX - event.x, previousY - event.y)
+                if (isSwipe(event) &&
+                        renderer.swipe(event.x, event.y)) {
                     previousX = event.x
                     previousY = event.y
-                } else {
-                    release()
                 }
+                else
+                    //renderer.swipe(event.x,event.y)
+                    renderer.moveTo(event.x, event.y)
             }
             else -> release()
         }
 
         return true
+    }
+
+    fun addBubble(pi:PickerItem) {
+        val x = if (Random().nextBoolean()) -0.7f else 0.7f
+        val y = if (Random().nextBoolean()) -0.5f / scaleY else 0.5f / scaleY
+        pi.x = x
+        pi.y = y
+        val radius = if (pi.urgent) 0.1f else 0.155f
+        renderer.addItem(pi,scaleX,scaleY,radius)
+        renderer.saveState()
+        this.surfaceChanged(this.holder,PixelFormat.RGBA_8888,width,height)
+        //this.surfaceCreated(this.holder)
+        this.requestRender()
     }
 
     private fun release() = postDelayed({ renderer.release() }, 0)
@@ -117,9 +147,8 @@ class BubblePicker : GLSurfaceView {
 
     private fun isSwipe(event: MotionEvent) = Math.abs(event.x - previousX) > 20 && Math.abs(event.y - previousY) > 20
 
-    private fun retrieveAttrubutes(attrs: AttributeSet) {
+    private fun retrieveAttributes(attrs: AttributeSet) {
         val array = context.obtainStyledAttributes(attrs, R.styleable.BubblePicker)
-
         if (array.hasValue(R.styleable.BubblePicker_maxSelectedCount)) {
             maxSelectedCount = array.getInt(R.styleable.BubblePicker_maxSelectedCount, -1)
         }
@@ -131,4 +160,14 @@ class BubblePicker : GLSurfaceView {
         array.recycle()
     }
 
+    override fun onPause() {
+        super.onPause()
+        renderer.saveState()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        //renderer.restoreState()
+        //this.requestRender()
+    }
 }

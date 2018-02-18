@@ -1,9 +1,11 @@
 package com.igalata.bubblelist.physics
 
+import android.text.style.LineHeightSpan
 import android.util.Log
 import com.igalata.bubblelist.rendering.Item
 import com.igalata.bubblelist.sqr
 import org.jbox2d.common.Vec2
+import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.World
 import java.util.*
 
@@ -28,7 +30,7 @@ object Engine {
 
     private val world = World(Vec2(0f, 0f), false)
     private val step = 0.0005f
-    private val bodies: ArrayList<CircleBody> = ArrayList()
+    val bodies: ArrayList<CircleBody> = ArrayList()
     private var borders: ArrayList<Border> = ArrayList()
     private val resizeStep = 0.005f
     private var scaleX = 0f
@@ -44,23 +46,31 @@ object Engine {
         get() = if (centerImmediately) 0.5f else 0.7f
     private var stepsCount = 0
 
+    private fun buildBody(scaleX:Float,scaleY: Float, x:Float, y:Float, radius: Float = 0.0f, density: Float = 0.0f):CircleBody{
+        var randRadius = if (radius != 0.0f) radius else  0.1f + Random().nextFloat()*(0.155f - 0.1f)
+        var randDensity = if (density != 0.0f) density else (0.5f - interpolate(0.3f, 0.5f, (randRadius - 0.1f)/(0.155f - 0.1f)))
+        return CircleBody(world, Vec2(x, y), randRadius * scaleX, (randRadius * scaleX) * 1.3f, randDensity)
+    }
+
+    fun addBody(scaleX: Float,scaleY: Float,x: Float,y: Float, radius:Float=0.0f,density: Float = 0.0f):CircleBody = buildBody(scaleX,scaleY,x,y,radius,density).let {
+        bodies.add(it)
+        return it
+    }
+
     fun build(bodiesCount: Int, scaleX: Float, scaleY: Float): List<CircleBody> {
-        val density = interpolate(0.08f, 0.2f, radius / 100f)
-        for (i in 0..bodiesCount - 1) {
-            val randRadius = 0.1f + Random().nextFloat()*(0.155f - 0.1f)
-            val x = if (Random().nextBoolean()) -startX else startX
-            val y = if (Random().nextBoolean()) -0.5f / scaleY else 0.5f / scaleY
-            val body = CircleBody(world, Vec2(x, y), randRadius * scaleX, (randRadius * scaleX) * 1.3f, density)
-            bodies.add(body)
+        for (i in 0 until bodiesCount-1) {
+            //addBody(scaleX,scaleY)
         }
-        this.scaleX = scaleX
-        this.scaleY = scaleY
-        createBorders()
 
         return bodies
     }
 
-    fun move() {
+    fun init(scaleX: Float, scaleY: Float){
+        this.scaleX = scaleX
+        this.scaleY = scaleY
+    }
+
+    @Synchronized fun move() {
         toBeResized.forEach { it.circleBody.resize(resizeStep) }
         world.step(if (centerImmediately) 0.035f else step, 11, 11)
         bodies.forEach { move(it) }
@@ -71,18 +81,40 @@ object Engine {
         }
     }
 
-    fun swipe(x: Float, y: Float) {
-        if (Math.abs(gravityCenter.x) < 2) gravityCenter.x += -x
-        if (Math.abs(gravityCenter.y) < 0.5f / scaleY) gravityCenter.y += y
-        increasedGravity = standardIncreasedGravity * Math.abs(x * 13) * Math.abs(y * 13)
+    fun swipe(x: Float, y: Float):Boolean {
+        if (!selectedBodies.isEmpty())return false
+
+       gravityCenter.apply {
+           this.x = x
+           this.y = y
+       }
+        increasedGravity = standardIncreasedGravity * Math.abs(x * 1.5f) * Math.abs(y * 1.5f)
         touch = true
-        Log.d("engine:" , "selected bodies:" + selectedBodies.toString())
+        return true
     }
 
-    fun release() {
-        //gravityCenter.setZero()
-        gravityCenter.set(0f,0.0f)
+    fun moveTo(x: Float, y: Float){
         touch = false
+        selectedBodies.forEach {
+            it.physicalBody.fixtureList.isSensor = true
+            //it.physicalBody.type = BodyType.KINEMATIC
+            it.physicalBody.setTransform(Vec2(x,y), Math.toRadians(0.0).toFloat())
+            //it.position =  Vec2(x*10,y*10)
+            //Log.d("moveTo:", "x," + x + "y" + y)
+            //it.physicalBody.fixtureList.isSensor = false
+        }
+    }
+    fun release() {
+        //if (selectedBodies.isEmpty()) {
+            gravityCenter.setZero()
+        //}
+        //gravityCenter.set(0f,1f)
+        Log.d("engine:","release ")
+        selectedBodies.forEach {
+            it.physicalBody.fixtureList.isSensor = false
+        }
+        touch = false
+
         //increasedGravity = standardIncreasedGravity
     }
 
@@ -97,19 +129,20 @@ object Engine {
         if (selectedBodies.size >= maxSelectedCount ?: bodies.size && !item.circleBody.increased) return false
 
         if (item.circleBody.isBusy) return false
-        item.circleBody.physicalBody.applyForce(Vec2(0f,5000f), Vec2(0f,100f))
+        //item.circleBody.physicalBody.applyForce(Vec2(0f,5000f), Vec2(0f,100f))
         item.circleBody.defineState()
-
         toBeResized.add(item)
-
         return true
     }
 
+    fun delete(item: Item){
+        item.circleBody.delete()
+    }
 
-    private fun createBorders() {
+    fun createBorders() {
         borders = arrayListOf(
                 Border(world, Vec2(0f, 0.5f / scaleY), Border.HORIZONTAL),
-                Border(world, Vec2(0f, -0.5f / scaleY), Border.HORIZONTAL),
+                Border(world, Vec2(0f, -1.0f / scaleY), Border.HORIZONTAL),
                 Border(world, Vec2(-0.5f, 0f / scaleY), Border.VERTICAL),
                 Border(world, Vec2(0.5f, 0f / scaleY), Border.VERTICAL)
         )

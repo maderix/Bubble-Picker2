@@ -19,6 +19,8 @@ class CircleBody(val world: World, var position: Vec2, var radius: Float, var in
 
     var toBeDecreased = false
 
+    var toBeDeleted = false
+
     val finished: Boolean
         get() = !toBeIncreased && !toBeDecreased && !isIncreasing && !isDecreasing
 
@@ -91,6 +93,9 @@ class CircleBody(val world: World, var position: Vec2, var radius: Float, var in
         }
     }
 
+    fun delete(){
+        world.destroyBody(physicalBody)
+    }
     private fun reset() {
         physicalBody.fixtureList?.shape?.m_radius = radius + margin
     }
