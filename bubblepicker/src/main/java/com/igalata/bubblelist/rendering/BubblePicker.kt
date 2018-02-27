@@ -3,6 +3,7 @@ package com.igalata.bubblelist.rendering
 import android.content.Context
 import android.graphics.PixelFormat
 import android.opengl.GLSurfaceView
+import android.os.Parcelable
 import android.support.annotation.ColorInt
 import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
@@ -159,7 +160,7 @@ class BubblePicker : GLSurfaceView {
 
         array.recycle()
     }
-
+    /*TODO : Save data in onSaveInstanceState() rather than here */
     override fun onPause() {
         super.onPause()
         renderer.saveState()

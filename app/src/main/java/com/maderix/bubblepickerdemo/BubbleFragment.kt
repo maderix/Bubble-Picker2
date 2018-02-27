@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ToggleButton
 import com.github.debop.kodatimes.now
 import com.github.debop.kodatimes.toDateTime
 import com.github.debop.kodatimes.tomorrow
@@ -49,13 +50,13 @@ class BubbleFragment : DialogFragment() {
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         var rootView:View =  inflater.inflate(R.layout.fragment_bubble, container, false)
-        rootView.btn_ok.setOnClickListener {
+        rootView.tb_someday.setOnClickListener {
             var title:String = ed_task_title.text.toString()
             var urgent:Boolean = cb_urgent.isChecked
             var dateTime:DateTime = DateTime()
-            if (rb_today.isSelected)
+            if (tb_today.isChecked)
                 dateTime = now()
-            else
+            else if(tb_today.isChecked)
                 dateTime = tomorrow()
             Random().let {
                 var startColor: Int = it.nextInt(10)
@@ -65,7 +66,21 @@ class BubbleFragment : DialogFragment() {
 
             dismiss()
         }
-        rootView.ib_date.setOnClickListener{
+        rootView.tb_today.setOnCheckedChangeListener{buttonView, isChecked ->
+            if (isChecked)
+                buttonView.setBackgroundColor(resources.getColor(R.color.blueStart))
+            else
+                buttonView.setBackgroundColor(resources.getColor(R.color.blueEnd))
+            rootView.tb_tomorrow.isChecked = false
+        }
+        rootView.tb_tomorrow.setOnCheckedChangeListener{ buttonView, isChecked ->
+            if (isChecked)
+                buttonView.setBackgroundColor(resources.getColor(R.color.blueStart))
+            else
+                buttonView.setBackgroundColor(resources.getColor(R.color.blueEnd))
+            rootView.tb_today.isChecked = false
+        }
+        rootView.tb_someday.setOnClickListener{
             mListener!!.onFragmentInteraction(true)
         }
 
