@@ -50,7 +50,7 @@ class BubbleFragment : DialogFragment() {
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         var rootView:View =  inflater.inflate(R.layout.fragment_bubble, container, false)
-        rootView.tb_someday.setOnClickListener {
+        rootView.bt_add_bubble.setOnClickListener {
             var title:String = ed_task_title.text.toString()
             var urgent:Boolean = cb_urgent.isChecked
             var dateTime:DateTime = DateTime()
@@ -82,12 +82,13 @@ class BubbleFragment : DialogFragment() {
         }
         rootView.tb_someday.setOnClickListener{
             mListener!!.onFragmentInteraction(true)
+            dismiss()
         }
 
         return rootView
     }
 
-    fun onButtonPressed(bubbleTaskData: BubbleTaskData) {
+    private fun onButtonPressed(bubbleTaskData: BubbleTaskData) {
         if (mListener != null) {
             mListener!!.onFragmentInteraction(bubbleTaskData)
         }

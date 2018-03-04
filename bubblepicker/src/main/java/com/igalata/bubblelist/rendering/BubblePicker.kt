@@ -153,11 +153,9 @@ class BubblePicker : GLSurfaceView {
         if (array.hasValue(R.styleable.BubblePicker_maxSelectedCount)) {
             maxSelectedCount = array.getInt(R.styleable.BubblePicker_maxSelectedCount, -1)
         }
-
         if (array.hasValue(R.styleable.BubblePicker_backgroundColor)) {
             background = array.getColor(R.styleable.BubblePicker_backgroundColor, -1)
         }
-
         array.recycle()
     }
     /*TODO : Save data in onSaveInstanceState() rather than here */

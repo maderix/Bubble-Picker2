@@ -13,4 +13,28 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="inline_preferences">inline prefs</string>
+    <string name="title_checkbox_preference">Title checkbox</string>
+    <string name="summary_checkbox_preference">Summary checkbox pref</string>
+    <string name="dialog_based_preferences">Dialog based prefs</string>
+    <string name="title_edittext_preference">Editbox Pref</string>
+    <string name="summary_edittext_preference">Editbox pref summary</string>
+    <string name="dialog_title_edittext_preference">Dialog Title pref</string>
+    <string name="title_list_preference">Title list pref</string>
+    <string name="summary_list_preference">Summary list pref</string>
+    <string name="dialog_title_list_preference">Dialog title list pref</string>
+    <string name="launch_preferences">Launch pref</string>
+    <string name="title_screen_preference">Title list pref</string>
+    <string name="summary_screen_preference">Summary scree pref</string>
+    <string name="title_next_screen_toggle_preference">Title next screen toggle pref</string>
+    <string name="summary_next_screen_toggle_preference">summary next screen toggle pref</string>
+    <string name="title_intent_preference">Title inent pref</string>
+    <string name="summary_intent_preference">summary intent pref</string>
+    <string name="preference_attributes">Pref attributes</string>
+    <string name="title_parent_preference">title parent pref</string>
+    <string name="summary_parent_preference">summary parent pref</string>
+    <string name="title_child_preference">Title child pref</string>
+    <string name="summary_child_preference">summary child pref</string>
+    <!--hints-->
+    <string name ="hint_add_bubble_remind">Remind me</string>
 </resources>

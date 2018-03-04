@@ -20,6 +20,8 @@
         <item>Paraguay</item>
         <item>GOOL</item>
     </string-array>
+    <string-array name="entries_list_preference">Entries list pref</string-array>
+    <string-array name="entryvalues_list_preference">Entry value pref</string-array>
 
     <integer-array name="images">
         <item>@drawable/argentina</item>

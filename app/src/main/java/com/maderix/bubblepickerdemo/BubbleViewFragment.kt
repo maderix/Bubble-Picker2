@@ -1,6 +1,7 @@
 package com.maderix.bubblepickerdemo
 
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Typeface
 import android.os.Bundle
@@ -19,6 +20,7 @@ import com.igalata.bubblelist.model.BubbleGradient
 import com.igalata.bubblelist.model.PickerItem
 
 import kotlinx.android.synthetic.main.fragment_bubble_view.*
+import kotlinx.android.synthetic.main.fragment_bubble_view.view.*
 import org.joda.time.DateTime
 import java.nio.charset.Charset
 
@@ -31,17 +33,19 @@ class BubbleViewFragment : Fragment() {
     private val boldTypeface by lazy { Typeface.createFromAsset(activity?.assets, ROBOTO_BOLD) }
     private val mediumTypeface by lazy { Typeface.createFromAsset(activity?.assets, ROBOTO_MEDIUM) }
     private val regularTypeface by lazy { Typeface.createFromAsset(activity?.assets, ROBOTO_REGULAR) }
-
+    private var rootView:View? = null
+    private var mListener: BubbleViewFragment.OnFragmentInteractionListener? = null
+    private var curActivity:Activity? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        val rootView = inflater.inflate(R.layout.fragment_bubble_view, container, false)
+        rootView = inflater.inflate(R.layout.fragment_bubble_view, container, false)
 
         val titles = resources.getStringArray(R.array.countries)
         val colors = resources.obtainTypedArray(R.array.colors)
         val images = resources.obtainTypedArray(R.array.images)
-        bubblePicker.adapter = object : BubblePickerAdapter {
+        rootView?.picker?.adapter = object : BubblePickerAdapter {
             override val totalCount = titles.size
             override fun getItem(position: Int): PickerItem {
                 return PickerItem().apply {
@@ -49,47 +53,34 @@ class BubbleViewFragment : Fragment() {
                     gradient = BubbleGradient(colors.getColor((position * 2) % 8, 0),
                             colors.getColor((position * 2) % 8 + 1, 0), BubbleGradient.VERTICAL)
                     typeface = mediumTypeface
-                    textColor = ContextCompat.getColor(rootView.context, android.R.color.white)
-                    backgroundImage = ContextCompat.getDrawable(rootView.context, images.getResourceId(position, 0))
+                    textColor = ContextCompat.getColor(rootView!!.context, android.R.color.white)
+                    backgroundImage = ContextCompat.getDrawable(rootView!!.context, images.getResourceId(position, 0))
                 }
             }
         }
-
-        //Add floating action button listener
-        fab_bubble.setOnClickListener{
-            BubbleFragment.newInstance(BubbleTaskData("Hello", false, DateTime(now().toDateTime()), 0, 0)).apply{
-                activity?.supportFragmentManager.let {
-                    it?.beginTransaction()?.add(this, "AddBubbleFragment")?.commit()
-                }
-            }
-        }
-        bubblePicker.bubbleSize = 10
-        bubblePicker.listener = object : BubblePickerListener {
+        rootView?.picker?.bubbleSize = 10
+        rootView?.picker?.listener = object : BubblePickerListener {
             override fun onBubbleSelected(item: PickerItem) {
-
                 //toast("${item.title} selected")
             }
-
             override fun onBubbleDeselected(item: PickerItem) {
                 //toast("${item.title} deselected")
             }
-
             override fun onSaveBubbles(json:String){
                 val filename = "bubbles.save"
-                activity?.applicationContext?.deleteFile(filename)
-                activity?.applicationContext?.openFileOutput(filename, Context.MODE_PRIVATE).use {
+                curActivity?.applicationContext?.deleteFile(filename)
+                curActivity?.applicationContext?.openFileOutput(filename, Context.MODE_PRIVATE).use {
                     it?.write(json.toByteArray())
                 }
             }
-
             override fun onLoadBubbles(): String {
                 val fileName = "bubbles.save"
                 var string = ""
-                var file = activity?.getFileStreamPath(fileName)
+                var file = curActivity?.getFileStreamPath(fileName)
                 if (!file!!.exists())
                     return string
 
-                activity?.openFileInput(fileName).use{
+                curActivity?.openFileInput(fileName).use{
                     var byteArray = ByteArray(it!!.available())
                     while((it.read(byteArray)) != -1)
                         string += byteArray.toString(Charset.defaultCharset())
@@ -103,11 +94,21 @@ class BubbleViewFragment : Fragment() {
                     gradient = BubbleGradient(bubbleTaskData.startColor ,
                             bubbleTaskData.endColor, BubbleGradient.VERTICAL)
                     typeface = mediumTypeface
-                    textColor = ContextCompat.getColor(activity!!, android.R.color.white)
-                    backgroundImage = ContextCompat.getDrawable(activity!!, images.getResourceId(1, 0))
+                    textColor = ContextCompat.getColor(rootView!!.context, android.R.color.white)
+                    backgroundImage = ContextCompat.getDrawable(rootView!!.context, images.getResourceId(1, 0))
                 }
             }
         }
+        rootView?.fab_add_bubble?.setOnClickListener{
+            BubbleFragment.newInstance(BubbleTaskData("Hello", false, DateTime(now().toDateTime()), 0, 0)).apply{
+                (curActivity as DemoActivity)?.supportFragmentManager
+                        ?.beginTransaction()
+                        //.remove(null)
+                        ?.add(this, "AddBubbleFragment")
+                        ?.commit()
+            }
+        }
+        //rootView.visibility = View.VISIBLE
         return rootView
     }
 
@@ -137,6 +138,43 @@ class BubbleViewFragment : Fragment() {
             fragment.arguments = args
             return fragment
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        picker.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        picker.onPause()
+    }
+
+    private fun onButtonPressed(bubbleTaskData: BubbleTaskData) {
+        if (mListener != null) {
+            mListener!!.onFragmentInteraction(bubbleTaskData)
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is BubbleViewFragment.OnFragmentInteractionListener) {
+            mListener = context
+            curActivity = context as Activity
+        } else {
+            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+        }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        mListener = null
+    }
+
+
+    interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        fun onFragmentInteraction(bubbleTaskData: BubbleTaskData)
     }
 
 }// Required empty public constructor
